@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+package booking.service.domain;
+
+option java_outer_classname = "BookingServiceDomain";
+
+
+message PatientState {
+  repeated Bookings bookings = 1;
+  PatientDetails patientDetails = 2;
+}
+
+message Bookings {
+   string bookingId = 1;
+   string type = 2;
+   string date = 3;
+}
+
+message PatientDetails {
+  string patientId = 1;
+  string patientName = 2;
+}
+
+message BookingAdded {
+  Bookings booking = 1;
+}
+
+message PatientAdded {
+  PatientDetails patientDetails = 1;
+}
+
+message BookingRemoved {
+  string bookingId = 1;
+}

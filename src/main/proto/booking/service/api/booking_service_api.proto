@@ -1,0 +1,82 @@
+syntax = "proto3";
+
+package booking.service.api;
+
+option java_outer_classname = "BookingServiceApi";
+
+import "akkaserverless/annotations.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+
+message Patient {
+  repeated Bookings bookings = 1;
+  PatientDetails patientDetails = 2;
+}
+
+message Bookings {
+  string booking_id = 1;
+  string type = 2;
+  string date = 3;
+}
+
+message PatientDetails {
+  string patient_id = 1 [(akkaserverless.field).entity_key = true];
+  string patientName = 2;
+}
+
+message AddBooking {
+  string patient_id = 1 [(akkaserverless.field).entity_key = true];
+  string booking_id = 2;
+  string type = 3;
+  string date = 4;
+}
+
+message DeleteBooking {
+  string patient_id = 1 [(akkaserverless.field).entity_key = true];
+  string booking_id = 2;
+}
+
+message GetPatient {
+  string patient_id = 1 [(akkaserverless.field).entity_key = true];
+}
+
+service BookingService {
+  option (akkaserverless.codegen) = {
+    event_sourced_entity: {
+      name: "booking.service.domain.BookingServiceEntity"
+      entity_type: "eventsourced-booking-service"
+      state: "booking.service.domain.PatientState"
+      events: [
+        "booking.service.domain.BookingAdded", 
+        "booking.service.domain.BookingRemoved",
+        "booking.service.domain.PatientAdded"]
+    }
+  };
+
+  rpc CreateBooking(AddBooking) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/patient/{patient_id}/bookings/add"
+      body: "*"
+    };
+  }
+
+  rpc CreatePatient(PatientDetails) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/patient/{patient_id}/add"
+      body: "*"
+    };
+  }
+
+  rpc RemoveBooking(DeleteBooking) returns (google.protobuf.Empty) {
+    option (google.api.http).post = "/patient/{patient_id}/bookings/{booking_id}/remove";
+  }
+  rpc RetrievePatient(GetPatient) returns (Patient) {
+    option (google.api.http) = {
+      get: "/patients/{patient_id}"
+      additional_bindings: {
+        get: "/patients/{patient_id}/bookings"
+        response_body: "bookings"
+      }
+    };
+  }
+}
