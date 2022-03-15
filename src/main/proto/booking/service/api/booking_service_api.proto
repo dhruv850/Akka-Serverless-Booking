@@ -13,15 +13,19 @@ message Patient {
   PatientDetails patientDetails = 2;
 }
 
-message Bookings {
-  string booking_id = 1;
-  string type = 2;
-  string date = 3;
+message GetPatient {
+  string patient_id = 1 [(akkaserverless.field).entity_key = true];
 }
 
 message PatientDetails {
   string patient_id = 1 [(akkaserverless.field).entity_key = true];
   string patientName = 2;
+}
+
+message Bookings {
+  string booking_id = 1;
+  string type = 2;
+  string date = 3;
 }
 
 message AddBooking {
@@ -34,10 +38,6 @@ message AddBooking {
 message DeleteBooking {
   string patient_id = 1 [(akkaserverless.field).entity_key = true];
   string booking_id = 2;
-}
-
-message GetPatient {
-  string patient_id = 1 [(akkaserverless.field).entity_key = true];
 }
 
 service BookingService {
@@ -70,6 +70,7 @@ service BookingService {
   rpc RemoveBooking(DeleteBooking) returns (google.protobuf.Empty) {
     option (google.api.http).post = "/patient/{patient_id}/bookings/{booking_id}/remove";
   }
+  
   rpc RetrievePatient(GetPatient) returns (Patient) {
     option (google.api.http) = {
       get: "/patients/{patient_id}"

@@ -53,7 +53,7 @@ public class BookingServiceEntity extends AbstractBookingServiceEntity {
     if (findItemByProductId(currentState, command.getBookingId()).isEmpty()) {
       return effects()
               .error(
-                      "Cannot remove item " + command.getBookingId() + " because it is not in the patient.");
+                      "Cannot remove booking " + command.getBookingId() + " because it is not associated with this patient.");
     }
 
     BookingServiceDomain.BookingRemoved event =
@@ -189,7 +189,7 @@ public class BookingServiceEntity extends AbstractBookingServiceEntity {
     List<BookingServiceDomain.Bookings> items =
             removeItemByProductId(currentState, itemRemoved.getBookingId());
     items.sort(Comparator.comparing(BookingServiceDomain.Bookings::getBookingId));
-    return BookingServiceDomain.PatientState.newBuilder().addAllBookings(items).build();
+    return BookingServiceDomain.PatientState.newBuilder().addAllBookings(items).setPatientDetails(currentState.getPatientDetails()).build();
   }
   private List<BookingServiceDomain.Bookings> removeItemByProductId(
           BookingServiceDomain.PatientState patient, String productId) {
