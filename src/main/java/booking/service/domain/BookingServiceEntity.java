@@ -50,7 +50,7 @@ public class BookingServiceEntity extends AbstractBookingServiceEntity {
   public Effect<Empty> removeBooking(
           BookingServiceDomain.PatientState currentState,
           BookingServiceApi.DeleteBooking command) {
-    if (findItemByProductId(currentState, command.getBookingId()).isEmpty()) {
+    if (findItemByBookingId(currentState, command.getBookingId()).isEmpty()) {
       return effects()
               .error(
                       "Cannot remove booking " + command.getBookingId() + " because it is not associated with this patient.");
@@ -63,10 +63,10 @@ public class BookingServiceEntity extends AbstractBookingServiceEntity {
             .emitEvent(event)
             .thenReply(newState -> Empty.getDefaultInstance());
   }
-  private Optional<BookingServiceDomain.Bookings> findItemByProductId(
-          BookingServiceDomain.PatientState patient, String productId) {
+  private Optional<BookingServiceDomain.Bookings> findItemByBookingId(
+          BookingServiceDomain.PatientState patient, String bookingId) {
     Predicate<BookingServiceDomain.Bookings> lineItemExists =
-            lineItem -> lineItem.getBookingId().equals(productId);
+            lineItem -> lineItem.getBookingId().equals(bookingId);
     return patient.getBookingsList().stream().filter(lineItemExists).findFirst();
   }
 
@@ -192,9 +192,9 @@ public class BookingServiceEntity extends AbstractBookingServiceEntity {
     return BookingServiceDomain.PatientState.newBuilder().addAllBookings(items).setPatientDetails(currentState.getPatientDetails()).build();
   }
   private List<BookingServiceDomain.Bookings> removeItemByProductId(
-          BookingServiceDomain.PatientState patient, String productId) {
+          BookingServiceDomain.PatientState patient, String bookingId) {
     return patient.getBookingsList().stream()
-            .filter(lineItem -> !lineItem.getBookingId().equals(productId))
+            .filter(lineItem -> !lineItem.getBookingId().equals(bookingId))
             .collect(Collectors.toList());
   }
 
