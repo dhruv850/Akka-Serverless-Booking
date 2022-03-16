@@ -27,9 +27,23 @@ public class BookingServiceEntity extends AbstractBookingServiceEntity {
                 this.entityId = context.entityId();
         }
 
+        /*Method Handlers Starts */
+
         @Override
         public BookingServiceDomain.PatientState emptyState() {
                 return BookingServiceDomain.PatientState.getDefaultInstance();
+        }
+
+        @Override
+        public Effect<Empty> createPatient(BookingServiceDomain.PatientState currentState,
+                        BookingServiceApi.PatientDetails patientDetails) {
+                BookingServiceDomain.PatientAdded patientAddedEvent = BookingServiceDomain.PatientAdded.newBuilder()
+                                .setPatientDetails(BookingServiceDomain.PatientDetails.newBuilder()
+                                                .setPatientId(patientDetails.getPatientId())
+                                                .setPatientName(patientDetails.getPatientName())
+                                                .build())
+                                .build();
+                return effects().emitEvent(patientAddedEvent).thenReply(__ -> Empty.getDefaultInstance());
         }
 
         @Override
@@ -82,6 +96,10 @@ public class BookingServiceEntity extends AbstractBookingServiceEntity {
                                 .build(); // <2>
                 return effects().reply(apiPatient);
         }
+        
+        /*Method Handlers Ends */
+
+        /*Event Handlers Starts */
 
         @Override
         public BookingServiceDomain.PatientState bookingAdded(BookingServiceDomain.PatientState currentState,
@@ -111,30 +129,22 @@ public class BookingServiceEntity extends AbstractBookingServiceEntity {
                                 .setPatientDetails(currentState.getPatientDetails()).build();
         }
 
-        private List<BookingServiceDomain.Bookings> removeItemByProductId(
-                        BookingServiceDomain.PatientState patient, String bookingId) {
-                return patient.getBookingsList().stream()
-                                .filter(lineItem -> !lineItem.getBookingId().equals(bookingId))
-                                .collect(Collectors.toList());
-        }
-
-        @Override
-        public Effect<Empty> createPatient(BookingServiceDomain.PatientState currentState,
-                        BookingServiceApi.PatientDetails patientDetails) {
-                BookingServiceDomain.PatientAdded patientAddedEvent = BookingServiceDomain.PatientAdded.newBuilder()
-                                .setPatientDetails(BookingServiceDomain.PatientDetails.newBuilder()
-                                                .setPatientId(patientDetails.getPatientId())
-                                                .setPatientName(patientDetails.getPatientName())
-                                                .build())
-                                .build();
-                return effects().emitEvent(patientAddedEvent).thenReply(__ -> Empty.getDefaultInstance());
-        }
-
         @Override
         public BookingServiceDomain.PatientState patientAdded(BookingServiceDomain.PatientState currentState,
                         BookingServiceDomain.PatientAdded patientAdded) {
                 BookingServiceApi.PatientDetails currentPatientDetails = domainPatientDetailsToMap(currentState);
                 return mapToDomainPatientDetails(patientAdded.getPatientDetails(), currentPatientDetails);
+        }
+
+        /*Event Handlers Ends */
+
+        /*Utility Functions Starts */
+
+        private List<BookingServiceDomain.Bookings> removeItemByProductId(
+                        BookingServiceDomain.PatientState patient, String bookingId) {
+                return patient.getBookingsList().stream()
+                                .filter(lineItem -> !lineItem.getBookingId().equals(bookingId))
+                                .collect(Collectors.toList());
         }
 
         private BookingServiceApi.Bookings convertBooking(BookingServiceDomain.Bookings item) {
@@ -231,4 +241,6 @@ public class BookingServiceEntity extends AbstractBookingServiceEntity {
                                 .setPatientDetails(apiPatientDetailsToDomain(patientDetails, currentPatientDetails))
                                 .build();
         }
+
+        /*Utility Functions Ends */
 }
